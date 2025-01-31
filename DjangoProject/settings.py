@@ -37,7 +37,8 @@ else:
     DEBUG = False
 
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'store-production-b875.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['store-production-b875.up.railway.app']
 
 
 # Application definition

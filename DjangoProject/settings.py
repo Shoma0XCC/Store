@@ -12,6 +12,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+from environ import Env
+
+env = Env()
+Env.read_env()
+
+ENVIROMENT = env("ENVIROMENT", default="development")
+ENVIROMENT = "production"
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,10 +28,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9ug4x84=u&%3o0f=^4f^iq&o+z&v71d%4_%xib75+3l^mx-h^e'
+SECRET_KEY = env("SECRET_KEY", default="secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if ENVIROMENT == "development":
+    DEBUG = True
+else:
+    DEBUG = False
+
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,6 +61,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.staticfiles',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'DjangoProject.urls'
@@ -75,19 +89,22 @@ WSGI_APPLICATION = 'DjangoProject.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Название базы из docker-compose.yml
-        'USER': 'postgres',  # Имя пользователя
-        'PASSWORD': 'postgres',  # Пароль пользователя
-        'HOST': 'postgres',  # ВАЖНО: в Docker указываем не localhost, а имя сервиса!
-        'PORT': '5432',
+if ENVIROMENT == "development":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'postgres',  # Название базы из docker-compose.yml
+            'USER': 'postgres',  # Имя пользователя
+            'PASSWORD': 'postgres',  # Пароль пользователя
+            'HOST': 'postgres',  # ВАЖНО: в Docker указываем не localhost, а имя сервиса!
+            'PORT': '5432',
+        }
     }
-}
-
-
+else:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(env("DATABASE_URL", default="postgres://")),
+    }
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -127,6 +144,7 @@ STATICFILES_DIRS = (
         BASE_DIR / 'static',
 
         )
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
